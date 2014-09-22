@@ -10,7 +10,10 @@ import java.awt.Toolkit;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.BufferedReader;
+import java.io.BufferedWriter;
 import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.util.List;
@@ -27,6 +30,10 @@ import javax.swing.JProgressBar;
 import javax.swing.JTextField;
 import javax.swing.SwingWorker;
 
+/**
+ * This download is based on the code in assignment 3 of @author zall747
+ *
+ */
 public class Download extends JPanel implements ActionListener {
 
 	private final String TEXT_DOWNLOAD = "Download";
@@ -189,6 +196,42 @@ public class Download extends JPanel implements ActionListener {
 			if (!isCancelled()) {
 				if (process.exitValue() == 0) {
 					JOptionPane.showMessageDialog(null, "Download Successful!");
+					
+					/*
+					 * Store the name, directory and length of the input video in a txt file
+					 */
+					
+					try {
+						//Edit this later with the actual text file
+						
+						File f = new File("/afs/ec.auckland.ac.nz/users/z/a/zall747/unixhome/Documents/softeng206/assignment3/videoInfo.txt");
+						FileWriter fw = new FileWriter(f);
+						BufferedWriter bw = new BufferedWriter(fw);
+
+						//Store the video info in the txt file
+						File videoFile = new File(chosenFile.toString());
+						bw.write(videoFile.getPath());
+						bw.newLine();
+						
+						//Get the length of the video
+						String cmd = "avprobe -loglevel error -show_streams " + videoFile.getPath() + " | grep -i duration | cut -f2 -d=";
+					
+						ProcessBuilder builder = new ProcessBuilder("/bin/bash", "-c", cmd);
+						builder.redirectErrorStream(true);
+						Process process = builder.start();
+						
+						//read the output of the process
+						InputStream outStr = process.getInputStream();
+						BufferedReader stdout = new BufferedReader(new InputStreamReader(outStr));
+
+						//Write the length of the input video
+						bw.write(stdout.readLine());
+						
+						bw.close();
+						
+					} catch (IOException e1) {
+						e1.printStackTrace();
+					}
 					
 				//Generate error messages
 				} else if (process.exitValue() == 1) {

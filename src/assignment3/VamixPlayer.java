@@ -9,9 +9,15 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.KeyEvent;
 import java.io.BufferedReader;
+import java.io.BufferedWriter;
 import java.io.File;
+import java.io.FileReader;
+import java.io.FileWriter;
+import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.List;
 import java.util.regex.Matcher;
@@ -81,6 +87,9 @@ public class VamixPlayer implements ActionListener, ChangeListener {
 	private JMenuBar menuBar;
 	private JMenu fileMenu, submenu, helpMenu;
 	private JMenuItem newProj, openProj, fromURL, fromFolder, export, exit, report, about;
+	
+	private String workingDir = "";
+	private String hiddenDir = "";
 	
 	private VamixPlayer() {
 		
@@ -373,19 +382,12 @@ public class VamixPlayer implements ActionListener, ChangeListener {
 								inputVideo = chosenFile;
 								videoTimeSlider.setEnabled(true);
 								video.playMedia(inputVideo);
-								//Create a txt file with all the info about the imported video
 								playBtn.setText("pause");
 							}
 						}
 						if (inputFile != null) {
 							videoTimeSlider.setEnabled(true);
 							video.playMedia(inputVideo);
-							//Create a txt file with all the info about the imported video
-
-							File videoFile = new File(inputVideo);
-							System.out.println(videoFile.getName());
-							System.out.println(videoFile.getPath());
-							System.out.println(videoFile.getParent());
 							playBtn.setText("pause");
 							
 						}
@@ -415,7 +417,6 @@ public class VamixPlayer implements ActionListener, ChangeListener {
 
 				} else {
 					video.play();
-					System.out.println(video.getLength());
 					playBtn.setText("pause");
 				}
 			}
@@ -446,20 +447,14 @@ public class VamixPlayer implements ActionListener, ChangeListener {
 		//Handle Menu Bar events
 		if (e.getSource() == newProj) {
 
-			//Allow the user to choose the output file destination
-			JFileChooser dirChooser = new JFileChooser();  
-			dirChooser.setDialogTitle("Save to ...");
-			dirChooser.setFileSelectionMode(JFileChooser.CANCEL_OPTION);
-			//dirChooser.setAcceptAllFileFilterUsed(false);
-
-			int returnVal = dirChooser.showSaveDialog(null);
-
-			//If no directory was selected, don't extract!
-			if(returnVal != JFileChooser.APPROVE_OPTION) {
-				return;
-			}
-			//Get the name of the chosen directory 
-			String chosenDir = dirChooser.getSelectedFile().getPath();
+			JFrame downloadFrame = new JFrame("New Project");
+			
+			NewProject project = new NewProject();
+			downloadFrame.setContentPane(project);
+			downloadFrame.setLocation(300, 300);
+			downloadFrame.setSize(400, 170);
+			downloadFrame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+			downloadFrame.setVisible(true);
 			
 		} else if (e.getSource() == openProj) {
 
@@ -486,6 +481,44 @@ public class VamixPlayer implements ActionListener, ChangeListener {
 			if(returnVal == JFileChooser.APPROVE_OPTION) {
 				inputFile = chooser.getSelectedFile();
 				inputVideo = inputFile.toString();
+			}
+			
+			
+			/*
+			 * Store the name, directory and length of the input video in a txt file
+			 */
+			
+			try {
+				//Edit this later with the actual text file
+				File f = new File("/afs/ec.auckland.ac.nz/users/z/a/zall747/unixhome/Documents/softeng206/assignment3/videoInfo.txt");
+				FileWriter fw = new FileWriter(f);
+				BufferedWriter bw = new BufferedWriter(fw);
+
+				//Store the video info in the txt file
+				File videoFile = new File(inputVideo);
+				bw.write(videoFile.getName());
+				bw.newLine();
+				bw.write(videoFile.getParent());
+				bw.newLine();
+				
+				//Get the length of the video
+				String cmd = "avprobe -loglevel error -show_streams " + videoFile.getPath() + " | grep -i duration | cut -f2 -d=";
+			
+				ProcessBuilder builder = new ProcessBuilder("/bin/bash", "-c", cmd);
+				builder.redirectErrorStream(true);
+				Process process = builder.start();
+				
+				//read the output of the process
+				InputStream outStr = process.getInputStream();
+				BufferedReader stdout = new BufferedReader(new InputStreamReader(outStr));
+
+				//Write the length of the input video
+				bw.write(stdout.readLine());
+				
+				bw.close();
+				
+			} catch (IOException e1) {
+				e1.printStackTrace();
 			}
 
 		} else if (e.getSource() == export) {
