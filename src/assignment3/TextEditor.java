@@ -1,13 +1,11 @@
 package assignment3;
 
-import java.awt.BorderLayout;
 import java.awt.Dimension;
 import java.awt.Font;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.ItemEvent;
 import java.awt.event.ItemListener;
-import java.awt.event.KeyEvent;
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.File;
@@ -16,18 +14,12 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.PrintWriter;
-import java.util.List;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
-import javax.swing.ButtonGroup;
 import javax.swing.JButton;
 import javax.swing.JComboBox;
-import javax.swing.JFileChooser;
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
-import javax.swing.JProgressBar;
 import javax.swing.JRadioButton;
 import javax.swing.JScrollPane;
 import javax.swing.JTextArea;
@@ -53,6 +45,7 @@ public class TextEditor extends JPanel implements ActionListener {
 	// Initializing the labels
 	private JLabel textEditorLabel = new JLabel("Text Editor");
 	private JLabel screenLabel = new JLabel("Add text on: ");
+	private JLabel durationLabel = new JLabel("Duration (in seconds): ");
 	private JLabel backgroundImageLabel = new JLabel("Use for background: ");
 	private JLabel addTextLabel = new JLabel("Add Text:");
 	private JLabel wordLimitLabel = new JLabel("(30 words)");
@@ -62,6 +55,7 @@ public class TextEditor extends JPanel implements ActionListener {
 	private JLabel chooseColorLabel = new JLabel("Font colour: ");
 
 	// Initializing the textFields and textAreas
+	private JTextField addDuration = new JTextField();
 	private JTextArea addTextArea = new JTextArea(10, 40);
 	private JTextField addTimeFrame = new JTextField();
 
@@ -70,7 +64,7 @@ public class TextEditor extends JPanel implements ActionListener {
 			"Overlay on the video");
 	final private JRadioButton defaultCheck = new JRadioButton(
 			"Default black image");
-	final private JRadioButton uploadCheck = new JRadioButton(
+	final private JRadioButton frameCheck = new JRadioButton(
 			"A frame from the video at:");
 
 	String[] dropDownScreen = { "Title Screen", "Credit Screen" };
@@ -80,24 +74,27 @@ public class TextEditor extends JPanel implements ActionListener {
 			"TimesNewRoman", "Verdana" };
 	private JComboBox fontsList = new JComboBox(dropDownFonts);
 
-	String[] dropDownStyles = { "PLAIN", "BOLD", "ITALIC" };
+	String[] dropDownStyles = { "PLAIN", "BOLD", "ITALIC", "BOLD&ITALIC" };
 	private JComboBox stylesList = new JComboBox(dropDownStyles);
 
 	String[] dropDownSizes = { "8", "10", "14", "18", "22", "26", "30", "34",
 			"38", "42", "48", "52", "56", "72" };
 	private JComboBox sizesList = new JComboBox(dropDownSizes);
 
-	String[] dropDownColors = { "Black", "Green", "Blue", "Yellow", "Red",
-			"White" };
+	String[] dropDownColors = { "black", "green", "blue", "yellow", "red",
+			"white", "pink" };
 	private JComboBox coloursList = new JComboBox(dropDownColors);
 
-	private File file;
+	private File textFile;
 	private String screenType = "Title Screen";
+	private String titleDuration = "";
+	private String creditDuration = "";
 	private int backgroundImageOption = 0;
-	private int fontType = 0;
-	private int fontStyle = 0;
-	private int fontSize = 12;
-	private String fontColour = "BLACK";
+	//private int 
+	private int titleFontType = 0;
+	private int titleFontStyle = 0;
+	private int titleFontSize = 12;
+	private String titleFontColour = "black";
 
 	private JLabel separator = new JLabel("");
 	private JLabel separator2 = new JLabel("");
@@ -110,15 +107,16 @@ public class TextEditor extends JPanel implements ActionListener {
 	private String fontDir = "/usr/share/fonts/truetype/msttcorefonts/";
 	private String fontName = "";
 
-	
-	
-	private EmbeddedMediaPlayer video;
 	private BackgroundTask longTask;
+	EmbeddedMediaPlayer mediaVideo;
 
 	// Download constructor - sets the GUI for download
 	public TextEditor(EmbeddedMediaPlayer video) {
+		
+		
+	
+		mediaVideo = video;
 
-		this.video = video;
 
 		// change the font of the title
 		textEditorLabel.setFont(new Font("TimesRoman", Font.BOLD, 20));
@@ -142,14 +140,15 @@ public class TextEditor extends JPanel implements ActionListener {
 
 		add(screenLabel);
 		add(screenList);
+		add(durationLabel);
+		add(addDuration);
 		add(separator2);
 
 		add(backgroundImageLabel);
 		add(separator3);
 		add(overlayCheck);
 		add(defaultCheck);
-
-		add(uploadCheck);
+		add(frameCheck);
 		add(addTimeFrame);
 
 		add(separator4);
@@ -183,12 +182,13 @@ public class TextEditor extends JPanel implements ActionListener {
 		saveButton.setPreferredSize(new Dimension(150, 25));
 
 		addTimeFrame.setColumns(10);
+		addDuration.setColumns(3);
 
 		saveButton.setEnabled(true);
 
 		// add ItemListnew to the radio buttons, to check what happens when the
 		// radioButtons are checked or unchecked
-		uploadCheck.addItemListener(new ItemListener() {
+		frameCheck.addItemListener(new ItemListener() {
 
 			@Override
 			public void itemStateChanged(ItemEvent e) {
@@ -197,6 +197,7 @@ public class TextEditor extends JPanel implements ActionListener {
 
 					defaultCheck.setEnabled(false);
 					overlayCheck.setEnabled(false);
+					backgroundImageOption = 2;
 
 				} else {
 
@@ -212,11 +213,12 @@ public class TextEditor extends JPanel implements ActionListener {
 			public void itemStateChanged(ItemEvent e) {
 
 				if (e.getStateChange() == 1) {
-					uploadCheck.setEnabled(false);
+					frameCheck.setEnabled(false);
 					overlayCheck.setEnabled(false);
+					backgroundImageOption = 1;
 
 				} else {
-					uploadCheck.setEnabled(true);
+					frameCheck.setEnabled(true);
 					overlayCheck.setEnabled(true);
 
 				}
@@ -228,11 +230,12 @@ public class TextEditor extends JPanel implements ActionListener {
 			public void itemStateChanged(ItemEvent e) {
 
 				if (e.getStateChange() == 1) {
-					uploadCheck.setEnabled(false);
+					frameCheck.setEnabled(false);
 					defaultCheck.setEnabled(false);
+					backgroundImageOption = 0;
 
 				} else {
-					uploadCheck.setEnabled(true);
+					frameCheck.setEnabled(true);
 					defaultCheck.setEnabled(true);
 
 				}
@@ -249,6 +252,7 @@ public class TextEditor extends JPanel implements ActionListener {
 		String percentageDone;
 		String line;
 		Process process;
+		ProcessBuilder builder;
 
 		// Override doInBackgrount() to execute longTask in the background
 		@Override
@@ -256,18 +260,73 @@ public class TextEditor extends JPanel implements ActionListener {
 
 			try {
 
-				// using ProcessBuilder to execute bash command wget which
-				// downloads an mp3 file
+				File fileTitle = new File("TitleText.txt");
+				File fileCredit = new File("CreditText.txt");
 
-				String cmd = "avconv -loop 1 -shortest -y -i " + directory
-						+ "/out.png -t 10 -y " + directory + "/result.mp4";
+				if (backgroundImageOption == 0){
 
-				String cmd2 = "avconv -i result.mp4 -vf \"drawtext=fontfile='" + fontDir + "Times_New_Roman_Bold.ttf':textfile='" + directory + file + "':x=(main_w-text_w)/3:y=(main_h-text_h)/2:fontsize=24:fontcolor=green\" -an -y text.mp4";
 
-				String cmd3 = "avconv -ss 0 -i text.mp4 -vcodec libx264 -acodec aac -bsf:v h264_mp4toannexb -f mpegts -strict experimental -y file1.ts ; avconv -ss 0 -i wild.mp4 -vcodec libx264 -acodec aac -bsf:v h264_mp4toannexb -f mpegts -strict experimental -y file2.ts; avconv -i concat:\"file2.ts|file1.ts\" -c copy -bsf:a aac_adtstoasc -y full.mp4";
+					if (fileTitle.exists() && !fileCredit.exists()){
+						
 
-				ProcessBuilder builder = new ProcessBuilder("/bin/bash", "-c",
-						cmd + ";" + cmd2 + ";" + cmd3);
+						///needs to pick up media
+						//delay
+						String cmd2 = "avconv -ss 0 -i cc.mp4 -strict experimental -vf \"drawtext=fontfile='" + fontDir + fontName +"':textfile='" + directory + fileTitle + "':x=(main_w-text_w)/3:y=(main_h-text_h)/2:fontsize=" + titleFontSize + ":fontcolor=" + titleFontColour + "\" -t " + titleDuration + " -y text.mp4";
+						String cmd3 = "avconv -ss 0 -i text.mp4 -vcodec libx264 -acodec aac -bsf:v h264_mp4toannexb -f mpegts -strict experimental -y file1.ts ; avconv -ss " + titleDuration + " -i cc.mp4 -vcodec libx264 -acodec aac -bsf:v h264_mp4toannexb -f mpegts -strict experimental -y file2.ts; avconv -i concat:\"file1.ts|file2.ts\" -c copy -bsf:a aac_adtstoasc -y title.mp4";
+						builder = new ProcessBuilder("/bin/bash", "-c",
+								cmd2 + ";" + cmd3);
+					}
+					
+					else if (!fileTitle.exists() && fileCredit.exists()){
+						int time = (int) (mediaVideo.getLength()/1000 - Integer.parseInt(creditDuration));
+					
+						String startTime = "" + time;
+						
+						String cmd2 = "avconv -ss " + startTime + " -i cc.mp4 -strict experimental -vf \"drawtext=fontfile='" + fontDir + fontName +"':textfile='" + directory + fileCredit + "':x=(main_w-text_w)/3:y=(main_h-text_h)/2:fontsize=" + titleFontSize + ":fontcolor=" + titleFontColour + "\" -t " + creditDuration + " -y text1.mp4";
+						String cmd3 = "avconv -ss 0 -i cc.mp4 -vcodec libx264 -acodec aac -bsf:v h264_mp4toannexb -f mpegts -strict experimental -t " + startTime + " -y file1.ts ; avconv -ss 0 -i text1.mp4 -vcodec libx264 -acodec aac -bsf:v h264_mp4toannexb -f mpegts -strict experimental -y file2.ts; avconv -i concat:\"file1.ts|file2.ts\" -c copy -bsf:a aac_adtstoasc -y credit.mp4";
+						builder = new ProcessBuilder("/bin/bash", "-c",
+								cmd2 + ";" + cmd3);
+					}
+					
+					
+					else {
+						int time = (int) (mediaVideo.getLength()/1000 - Integer.parseInt(creditDuration));
+						int time1 = time - Integer.parseInt(titleDuration);
+			
+						String startTime = ""+ time;
+						String stopTime = ""+ time1;
+						String cmd2 = "avconv -ss 0 -i cc.mp4 -strict experimental -vf \"drawtext=fontfile='" + fontDir + fontName +"':textfile='" + directory + fileTitle + "':x=(main_w-text_w)/3:y=(main_h-text_h)/2:fontsize=" + titleFontSize + ":fontcolor=" + titleFontColour + "\" -t " + titleDuration + " -y text.mp4";
+						String cmd3 = "avconv -ss " + startTime + " -i cc.mp4 -strict experimental -vf \"drawtext=fontfile='" + fontDir + fontName +"':textfile='" + directory + fileCredit + "':x=(main_w-text_w)/3:y=(main_h-text_h)/2:fontsize=" + titleFontSize + ":fontcolor=" + titleFontColour + "\" -t " + creditDuration + " -y text1.mp4";
+						String cmd4 = "avconv -ss 0 -i text.mp4 -vcodec libx264 -acodec aac -bsf:v h264_mp4toannexb -f mpegts -strict experimental -y file3.ts ; avconv -ss " + titleDuration + " -i cc.mp4 -vcodec libx264 -acodec aac -bsf:v h264_mp4toannexb -f mpegts -strict experimental -y -t " + stopTime + " file5.ts; avconv -ss 0 -i text1.mp4 -vcodec libx264 -acodec aac -bsf:v h264_mp4toannexb -f mpegts -strict experimental -y file6.ts ; avconv -i concat:\"file3.ts|file5.ts|file6.ts\" -c copy -bsf:a aac_adtstoasc -y both.mp4";
+
+						builder = new ProcessBuilder("/bin/bash", "-c",
+								cmd2 + ";" + cmd3 + ";" + cmd4);
+						
+						
+					}
+					
+					
+					
+					
+				}
+
+				else {		
+
+
+					//create video from image
+					String cmd = "avconv -loop 1 -shortest -y -i " + directory
+							+ "/out.png -t 10 -y " + directory + "/result.mp4";
+
+					//add text
+					String cmd2 = "avconv -i result.mp4 -vf \"drawtext=fontfile='" + fontDir + fontName +"':textfile='" + directory + textFile + "':x=(main_w-text_w)/3:y=(main_h-text_h)/2:fontsize=" + titleFontSize + ":fontcolor=" + titleFontColour + "\" -an -y text.mp4";
+
+					//append
+					String cmd3 = "avconv -ss 0 -i text.mp4 -vcodec libx264 -acodec aac -bsf:v h264_mp4toannexb -f mpegts -strict experimental -y file1.ts ; avconv -ss 0 -i wild.mp4 -vcodec libx264 -acodec aac -bsf:v h264_mp4toannexb -f mpegts -strict experimental -y file2.ts; avconv -i concat:\"file2.ts|file1.ts\" -c copy -bsf:a aac_adtstoasc -y full.mp4";
+
+					builder = new ProcessBuilder("/bin/bash", "-c",
+							cmd + ";" + cmd2 + ";" + cmd3);
+
+				}
 
 				process = builder.start();
 
@@ -345,24 +404,33 @@ public class TextEditor extends JPanel implements ActionListener {
 	 */
 	public void actionPerformed(ActionEvent e) {
 		int fileExistsResponse = -1;
-		
-		if (e.getSource() == saveButton) {
 
+		if (e.getSource() == saveButton) {
+			
+			
+			
 			//check the screen type to select the corresponding text file
 			if (screenType == "Title Screen") {
-				file = new File("TitleText.txt");
+				textFile = new File("TitleText.txt");
+
+				//get the duration for title screen
+				titleDuration = addDuration.getText();
 
 			} else {
-				file = new File("CreditText.txt");
+				
+				textFile = new File("CreditText.txt");
+
+				//get the duration for title screen
+				creditDuration = addDuration.getText();
 			}
 
 			//check whether the file exists
-			if (file.exists()) {
-				
+			if (textFile.exists()) {
+
 				//if the file does exist, inform the user that they have previously created a screen
 				while (fileExistsResponse == JOptionPane.CLOSED_OPTION) {
 					Object[] options = { "Override it",
-							"Keep original settings" };
+					"Keep original settings" };
 					fileExistsResponse = JOptionPane
 							.showOptionDialog(
 									null,
@@ -371,12 +439,12 @@ public class TextEditor extends JPanel implements ActionListener {
 									JOptionPane.YES_NO_CANCEL_OPTION,
 									JOptionPane.QUESTION_MESSAGE, null,
 									options, options[1]);
-					
+
 					//override option
 					if (fileExistsResponse == 0) {
 						FileWriter fw;
 						try {
-							fw = new FileWriter(file, false);
+							fw = new FileWriter(textFile, false);
 							BufferedWriter bw = new BufferedWriter(fw);
 							PrintWriter x = new PrintWriter(bw);
 							x.println(addTextArea.getText());
@@ -386,10 +454,10 @@ public class TextEditor extends JPanel implements ActionListener {
 
 							e1.printStackTrace();
 						}
-						
+
 
 					}
-					
+
 					//keep existing option
 					else {
 						//refresh
@@ -398,13 +466,20 @@ public class TextEditor extends JPanel implements ActionListener {
 
 
 			}
-			
+
 			// If the file does not exist create a new file, and append the
 			// addTextArea text into the file
 			else {
+				
+				
 				FileWriter fw;
 				try {
-					fw = new FileWriter(file, true);
+					
+					System.out.println("im here ");
+					System.out.println(textFile);
+					
+					
+					fw = new FileWriter(textFile, true);
 					BufferedWriter bw = new BufferedWriter(fw);
 					PrintWriter x = new PrintWriter(bw);
 					x.println(addTextArea.getText());
@@ -416,26 +491,28 @@ public class TextEditor extends JPanel implements ActionListener {
 				}
 
 			}
-			
-			setFont();
 
-			saveButton.setEnabled(false);
+			setSettings();
+
+			//saveButton.setEnabled(false);
+		
+		}else if (e.getSource() == prevBtn){
 			commenceTextEdit();
-
+			
 		} else if (e.getSource() == screenList) {
 			screenType = screenList.getSelectedItem().toString();
 
 		} else if (e.getSource() == fontsList) {
-			fontType = fontsList.getSelectedIndex();
+			titleFontType = fontsList.getSelectedIndex();
 
 		} else if (e.getSource() == stylesList) {
-			fontStyle = stylesList.getSelectedIndex();
+			titleFontStyle = stylesList.getSelectedIndex();
 
 		} else if (e.getSource() == sizesList) {
-			fontSize = Integer.parseInt(sizesList.getSelectedItem().toString());
+			titleFontSize = Integer.parseInt(sizesList.getSelectedItem().toString());
 
 		} else if (e.getSource() == coloursList) {
-			fontColour = coloursList.getSelectedItem().toString();
+			titleFontColour = coloursList.getSelectedItem().toString();
 
 		}
 
@@ -443,9 +520,9 @@ public class TextEditor extends JPanel implements ActionListener {
 
 	// CommenceTextEdit method executes longTask
 	public void commenceTextEdit() {
-		addTextArea.setFont(new Font("TimesRoman", 0, fontSize)); // ASK CHAHAT
-																// WHERE TO ADD
-																// THIS
+		addTextArea.setFont(new Font("TimesRoman", 0, titleFontSize)); // ASK CHAHAT
+		// WHERE TO ADD
+		// THIS
 		longTask = new BackgroundTask();
 		longTask.execute();
 	}
@@ -457,27 +534,40 @@ public class TextEditor extends JPanel implements ActionListener {
 		saveButton.setEnabled(false);
 
 	}
-	
-	public void setFont() {
-		
+
+	public void setSettings() {
+
 		StringBuilder font = new StringBuilder();
-		if (fontType == 0){
+		if (titleFontType == 0){
 			font.append("Arial");
 		}
-		else if (fontType == 1){
-			font.append("Courier");
+		else if (titleFontType == 1){
+			font.append("Courier_New");
 		}
-		else if (fontType == 2){
+		else if (titleFontType == 2){
 			font.append("Georgia");
 		}
-		else if (fontType == 2){
+		else if (titleFontType == 2){
 			font.append("Times_New_Roman");
 		}
 		else{
 			font.append("Verdana");
 		}
 
-		
+		if (titleFontStyle == 1){
+			font.append("_Bold");
+		}
+		else if (titleFontStyle == 2){
+			font.append("_Italic");
+		}
+		else if (titleFontStyle == 3){
+			font.append("_Bold_Italic");
+		}
+
+		font.append(".ttf");
+		fontName = font.toString();
+
+
 
 	}
 
