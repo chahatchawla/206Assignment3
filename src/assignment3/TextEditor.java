@@ -36,10 +36,10 @@ public class TextEditor extends JPanel implements ActionListener {
 	private static final long serialVersionUID = 1L;
 
 	// Initializing the text for the buttons
-	private final String TEXT_TEXTEDIT = "Save";
+	private final String TEXT_SAVE = "Save";
 
 	// Initializing the three buttons
-	private JButton saveButton = new JButton(TEXT_TEXTEDIT);
+	private JButton saveButton = new JButton(TEXT_SAVE);
 	private JButton prevBtn = new JButton("preview");
 
 	// Initializing the labels
@@ -60,11 +60,11 @@ public class TextEditor extends JPanel implements ActionListener {
 	private JTextField addTimeFrame = new JTextField();
 
 	// Inializing the JRadioButton
-	final private JRadioButton overlayCheck = new JRadioButton(
+	private JRadioButton overlayCheck = new JRadioButton(
 			"Overlay on the video");
-	final private JRadioButton defaultCheck = new JRadioButton(
+	private JRadioButton defaultCheck = new JRadioButton(
 			"Default black image");
-	final private JRadioButton frameCheck = new JRadioButton(
+	private JRadioButton frameCheck = new JRadioButton(
 			"A frame from the video at:");
 
 	String[] dropDownScreen = { "Title Screen", "Credit Screen" };
@@ -90,11 +90,12 @@ public class TextEditor extends JPanel implements ActionListener {
 	private String titleDuration = "";
 	private String creditDuration = "";
 	private int backgroundImageOption = 0;
-	//private int 
-	private int titleFontType = 0;
-	private int titleFontStyle = 0;
-	private int titleFontSize = 12;
-	private String titleFontColour = "black";
+	private int fontType = 0;
+	private int fontStyle = 0;
+	private int fontSize = 12;
+	private String fontColour = "black";
+	String titleFrameTime = "";
+	String creditFrameTime = "";
 
 	private JLabel separator = new JLabel("");
 	private JLabel separator2 = new JLabel("");
@@ -103,7 +104,7 @@ public class TextEditor extends JPanel implements ActionListener {
 	private JLabel separator5 = new JLabel("");
 	private JLabel separator6 = new JLabel("");
 
-	private String directory = "/afs/ec.auckland.ac.nz/users/c/c/ccha504/unixhome/Documents/206/assignment3/";
+	private String directory = "/afs/ec.auckland.ac.nz/users/a/s/asye118/unixhome/Documents/206/assignment3/";
 	private String fontDir = "/usr/share/fonts/truetype/msttcorefonts/";
 	private String fontName = "";
 
@@ -112,9 +113,9 @@ public class TextEditor extends JPanel implements ActionListener {
 
 	// Download constructor - sets the GUI for download
 	public TextEditor(EmbeddedMediaPlayer video) {
-		
-		
-	
+
+
+
 		mediaVideo = video;
 
 
@@ -267,65 +268,154 @@ public class TextEditor extends JPanel implements ActionListener {
 
 
 					if (fileTitle.exists() && !fileCredit.exists()){
-						
+
 
 						///needs to pick up media
 						//delay
-						String cmd2 = "avconv -ss 0 -i cc.mp4 -strict experimental -vf \"drawtext=fontfile='" + fontDir + fontName +"':textfile='" + directory + fileTitle + "':x=(main_w-text_w)/3:y=(main_h-text_h)/2:fontsize=" + titleFontSize + ":fontcolor=" + titleFontColour + "\" -t " + titleDuration + " -y text.mp4";
-						String cmd3 = "avconv -ss 0 -i text.mp4 -vcodec libx264 -acodec aac -bsf:v h264_mp4toannexb -f mpegts -strict experimental -y file1.ts ; avconv -ss " + titleDuration + " -i cc.mp4 -vcodec libx264 -acodec aac -bsf:v h264_mp4toannexb -f mpegts -strict experimental -y file2.ts; avconv -i concat:\"file1.ts|file2.ts\" -c copy -bsf:a aac_adtstoasc -y title.mp4";
+						String cmd2 = "avconv -ss 0 -i wild.mp4 -strict experimental -vf \"drawtext=fontfile='" + fontDir + fontName +"':textfile='" + directory + fileTitle + "':x=(main_w-text_w)/3:y=(main_h-text_h)/2:fontsize=" + fontSize + ":fontcolor=" + fontColour + "\" -t " + titleDuration + " -y text.mp4";
+						String cmd3 = "avconv -ss 0 -i text.mp4 -vcodec libx264 -acodec aac -bsf:v h264_mp4toannexb -f mpegts -strict experimental -y file1.ts ; avconv -ss " + titleDuration + " -i wild.mp4 -vcodec libx264 -acodec aac -bsf:v h264_mp4toannexb -f mpegts -strict experimental -y file2.ts; avconv -i concat:\"file1.ts|file2.ts\" -c copy -bsf:a aac_adtstoasc -y title.mp4";
 						builder = new ProcessBuilder("/bin/bash", "-c",
 								cmd2 + ";" + cmd3);
 					}
-					
+
 					else if (!fileTitle.exists() && fileCredit.exists()){
 						int time = (int) (mediaVideo.getLength()/1000 - Integer.parseInt(creditDuration));
-					
+
 						String startTime = "" + time;
-						
-						String cmd2 = "avconv -ss " + startTime + " -i cc.mp4 -strict experimental -vf \"drawtext=fontfile='" + fontDir + fontName +"':textfile='" + directory + fileCredit + "':x=(main_w-text_w)/3:y=(main_h-text_h)/2:fontsize=" + titleFontSize + ":fontcolor=" + titleFontColour + "\" -t " + creditDuration + " -y text1.mp4";
-						String cmd3 = "avconv -ss 0 -i cc.mp4 -vcodec libx264 -acodec aac -bsf:v h264_mp4toannexb -f mpegts -strict experimental -t " + startTime + " -y file1.ts ; avconv -ss 0 -i text1.mp4 -vcodec libx264 -acodec aac -bsf:v h264_mp4toannexb -f mpegts -strict experimental -y file2.ts; avconv -i concat:\"file1.ts|file2.ts\" -c copy -bsf:a aac_adtstoasc -y credit.mp4";
+
+						String cmd2 = "avconv -ss " + startTime + " -i wild.mp4 -strict experimental -vf \"drawtext=fontfile='" + fontDir + fontName +"':textfile='" + directory + fileCredit + "':x=(main_w-text_w)/3:y=(main_h-text_h)/2:fontsize=" + fontSize + ":fontcolor=" + fontColour + "\" -t " + creditDuration + " -y text1.mp4";
+						String cmd3 = "avconv -ss 0 -i wild.mp4 -vcodec libx264 -acodec aac -bsf:v h264_mp4toannexb -f mpegts -strict experimental -t " + startTime + " -y file1.ts ; avconv -ss 0 -i text1.mp4 -vcodec libx264 -acodec aac -bsf:v h264_mp4toannexb -f mpegts -strict experimental -y file2.ts; avconv -i concat:\"file1.ts|file2.ts\" -c copy -bsf:a aac_adtstoasc -y credit.mp4";
 						builder = new ProcessBuilder("/bin/bash", "-c",
 								cmd2 + ";" + cmd3);
 					}
-					
-					
+
+
 					else {
 						int time = (int) (mediaVideo.getLength()/1000 - Integer.parseInt(creditDuration));
 						int time1 = time - Integer.parseInt(titleDuration);
-			
+
 						String startTime = ""+ time;
 						String stopTime = ""+ time1;
-						String cmd2 = "avconv -ss 0 -i cc.mp4 -strict experimental -vf \"drawtext=fontfile='" + fontDir + fontName +"':textfile='" + directory + fileTitle + "':x=(main_w-text_w)/3:y=(main_h-text_h)/2:fontsize=" + titleFontSize + ":fontcolor=" + titleFontColour + "\" -t " + titleDuration + " -y text.mp4";
-						String cmd3 = "avconv -ss " + startTime + " -i cc.mp4 -strict experimental -vf \"drawtext=fontfile='" + fontDir + fontName +"':textfile='" + directory + fileCredit + "':x=(main_w-text_w)/3:y=(main_h-text_h)/2:fontsize=" + titleFontSize + ":fontcolor=" + titleFontColour + "\" -t " + creditDuration + " -y text1.mp4";
-						String cmd4 = "avconv -ss 0 -i text.mp4 -vcodec libx264 -acodec aac -bsf:v h264_mp4toannexb -f mpegts -strict experimental -y file3.ts ; avconv -ss " + titleDuration + " -i cc.mp4 -vcodec libx264 -acodec aac -bsf:v h264_mp4toannexb -f mpegts -strict experimental -y -t " + stopTime + " file5.ts; avconv -ss 0 -i text1.mp4 -vcodec libx264 -acodec aac -bsf:v h264_mp4toannexb -f mpegts -strict experimental -y file6.ts ; avconv -i concat:\"file3.ts|file5.ts|file6.ts\" -c copy -bsf:a aac_adtstoasc -y both.mp4";
+						String cmd2 = "avconv -ss 0 -i wild.mp4 -strict experimental -vf \"drawtext=fontfile='" + fontDir + fontName +"':textfile='" + directory + fileTitle + "':x=(main_w-text_w)/3:y=(main_h-text_h)/2:fontsize=" + fontSize + ":fontcolor=" + fontColour + "\" -t " + titleDuration + " -y text.mp4";
+						String cmd3 = "avconv -ss " + startTime + " -i wild.mp4 -strict experimental -vf \"drawtext=fontfile='" + fontDir + fontName +"':textfile='" + directory + fileCredit + "':x=(main_w-text_w)/3:y=(main_h-text_h)/2:fontsize=" + fontSize + ":fontcolor=" + fontColour + "\" -t " + creditDuration + " -y text1.mp4";
+						String cmd4 = "avconv -ss 0 -i text.mp4 -vcodec libx264 -acodec aac -bsf:v h264_mp4toannexb -f mpegts -strict experimental -y file3.ts ; avconv -ss " + titleDuration + " -i wild.mp4 -vcodec libx264 -acodec aac -bsf:v h264_mp4toannexb -f mpegts -strict experimental -y -t " + stopTime + " file5.ts; avconv -ss 0 -i text1.mp4 -vcodec libx264 -acodec aac -bsf:v h264_mp4toannexb -f mpegts -strict experimental -y file6.ts ; avconv -i concat:\"file3.ts|file5.ts|file6.ts\" -c copy -bsf:a aac_adtstoasc -y both.mp4";
 
 						builder = new ProcessBuilder("/bin/bash", "-c",
 								cmd2 + ";" + cmd3 + ";" + cmd4);
-						
-						
+
+
 					}
-					
-					
-					
-					
+
+
+
+
 				}
 
 				else {		
+					String inputFrameTime;
+					String inputFrameTime1;
+					String cmd;
+					
 
 
-					//create video from image
-					String cmd = "avconv -loop 1 -shortest -y -i " + directory
-							+ "/out.png -t 10 -y " + directory + "/result.mp4";
+					if (fileTitle.exists() && !fileCredit.exists()){
+						if (backgroundImageOption == 1){
 
-					//add text
-					String cmd2 = "avconv -i result.mp4 -vf \"drawtext=fontfile='" + fontDir + fontName +"':textfile='" + directory + textFile + "':x=(main_w-text_w)/3:y=(main_h-text_h)/2:fontsize=" + titleFontSize + ":fontcolor=" + titleFontColour + "\" -an -y text.mp4";
+							// screenshot at 00:00:00.001
+							inputFrameTime = "00:00:00.001";
+							
+						}
+						else {
+							
+							inputFrameTime = titleFrameTime;
+							
+						}
+						
+						cmd = "avconv -i wild.mp4 -ss " + inputFrameTime +" -f image2 -vframes 1 out.png";
+						//create video from image
+						String cmd2 = "avconv -loop 1 -shortest -y -i " + directory
+								+ "/out.png -t " + titleDuration + " -y " + directory + "/result.mp4";
 
-					//append
-					String cmd3 = "avconv -ss 0 -i text.mp4 -vcodec libx264 -acodec aac -bsf:v h264_mp4toannexb -f mpegts -strict experimental -y file1.ts ; avconv -ss 0 -i wild.mp4 -vcodec libx264 -acodec aac -bsf:v h264_mp4toannexb -f mpegts -strict experimental -y file2.ts; avconv -i concat:\"file2.ts|file1.ts\" -c copy -bsf:a aac_adtstoasc -y full.mp4";
+						//add text and append
+						String cmd3 = "avconv -ss 0 -i result.mp4 -strict experimental -vf \"drawtext=fontfile='" + fontDir + fontName +"':textfile='" + directory + fileTitle + "':x=(main_w-text_w)/3:y=(main_h-text_h)/2:fontsize=" + fontSize + ":fontcolor=" + fontColour + "\" -t " + titleDuration + " -y text.mp4";
+						String cmd4 = "avconv -ss 0 -i text.mp4 -vcodec libx264 -acodec aac -bsf:v h264_mp4toannexb -f mpegts -strict experimental -y file1.ts ; avconv -ss " + titleDuration + " -i wild.mp4 -vcodec libx264 -acodec aac -bsf:v h264_mp4toannexb -f mpegts -strict experimental -y file2.ts; avconv -i concat:\"file1.ts|file2.ts\" -c copy -bsf:a aac_adtstoasc -y title.mp4";
 
-					builder = new ProcessBuilder("/bin/bash", "-c",
-							cmd + ";" + cmd2 + ";" + cmd3);
 
+						builder = new ProcessBuilder("/bin/bash", "-c",
+								cmd + ";" + cmd2 + ";" + cmd3 + ";" + cmd4);
+					}
+
+					
+					
+					else if (!fileTitle.exists() && fileCredit.exists()){
+						if (backgroundImageOption == 1){
+
+							// screenshot at 00:00:00.001
+							inputFrameTime = "00:00:00.001";
+							
+						}
+						else {
+							
+							inputFrameTime = creditFrameTime;
+							System.out.println(inputFrameTime);
+							
+						}
+						
+						cmd = "avconv -i wild.mp4 -ss " + inputFrameTime +" -f image2 -vframes 1 out.png";
+						//create video from image
+						String cmd2 = "avconv -loop 1 -shortest -y -i " + directory
+								+ "/out.png -t " + creditDuration + " -y " + directory + "/result.mp4";
+						//add text
+						String cmd3 = "avconv -ss 0 -i result.mp4 -strict experimental -vf \"drawtext=fontfile='" + fontDir + fontName +"':textfile='" + directory + fileCredit + "':x=(main_w-text_w)/3:y=(main_h-text_h)/2:fontsize=" + fontSize + ":fontcolor=" + fontColour + "\" -t " + creditDuration + " -y text1.mp4";
+						//append
+						String cmd4 = "avconv -ss 0 -i wild.mp4 -vcodec libx264 -acodec aac -bsf:v h264_mp4toannexb -f mpegts -strict experimental -y file1.ts ; avconv -ss 0 -i text1.mp4 -vcodec libx264 -acodec aac -bsf:v h264_mp4toannexb -f mpegts -strict experimental -y file2.ts; avconv -i concat:\"file1.ts|file2.ts\" -c copy -bsf:a aac_adtstoasc -y credit.mp4";
+						builder = new ProcessBuilder("/bin/bash", "-c",
+								cmd + ";" + cmd2 + ";" + cmd3 + ";" + cmd4);
+					}
+
+
+					else {
+						
+						
+						if (backgroundImageOption == 1){
+
+							// screenshot at 00:00:00.001
+							inputFrameTime = "00:00:00.001";
+							inputFrameTime1 = "00:00:00.001";
+							
+						}
+						else {
+							inputFrameTime = titleFrameTime;
+							inputFrameTime1 = creditFrameTime;
+							
+						}
+						//create screenshot for titlevideo 
+						cmd = "avconv -i wild.mp4 -ss " + inputFrameTime +" -f image2 -vframes 1 out.png";
+
+						
+						//create screenshot for creditvideo
+						String cmd1 = "avconv -i wild.mp4 -ss " + inputFrameTime1 +" -f image2 -vframes 1 out1.png";
+
+						//create titlevideo from image
+						String cmd2 = "avconv -loop 1 -shortest -y -i " + directory
+								+ "/out.png -t " + titleDuration + " -y " + directory + "/result.mp4";
+						//create creditvideo from image
+						String cmd3 = "avconv -loop 1 -shortest -y -i " + directory
+								+ "/out1.png -t " + creditDuration + " -y " + directory + "/result1.mp4";
+						
+						//add text 
+						String cmd4 = "avconv -ss 0 -i result.mp4 -strict experimental -vf \"drawtext=fontfile='" + fontDir + fontName +"':textfile='" + directory + fileTitle + "':x=(main_w-text_w)/3:y=(main_h-text_h)/2:fontsize=" + fontSize + ":fontcolor=" + fontColour + "\" -t " + titleDuration + " -y text.mp4";
+						String cmd5 = "avconv -ss 0 -i result1.mp4 -strict experimental -vf \"drawtext=fontfile='" + fontDir + fontName +"':textfile='" + directory + fileCredit + "':x=(main_w-text_w)/3:y=(main_h-text_h)/2:fontsize=" + fontSize + ":fontcolor=" + fontColour + "\" -t " + creditDuration + " -y text1.mp4";
+
+						//append
+						String cmd6 = "avconv -ss 0 -i text.mp4 -vcodec libx264 -acodec aac -bsf:v h264_mp4toannexb -f mpegts -strict experimental -y file3.ts ; avconv -ss 0 -i wild.mp4 -vcodec libx264 -acodec aac -bsf:v h264_mp4toannexb -f mpegts -strict experimental -y file5.ts; avconv -ss 0 -i text1.mp4 -vcodec libx264 -acodec aac -bsf:v h264_mp4toannexb -f mpegts -strict experimental -y file6.ts ; avconv -i concat:\"file3.ts|file5.ts|file6.ts\" -c copy -bsf:a aac_adtstoasc -y both.mp4";
+						
+						builder = new ProcessBuilder("/bin/bash", "-c",
+								cmd + ";" + cmd1 + ";" + cmd2 + ";" + cmd3 + ";" + cmd4 + ";" + cmd5 + ";" + cmd6);
+
+
+					}
+					
 				}
 
 				process = builder.start();
@@ -406,22 +496,31 @@ public class TextEditor extends JPanel implements ActionListener {
 		int fileExistsResponse = -1;
 
 		if (e.getSource() == saveButton) {
-			
-			
-			
+
+
+
 			//check the screen type to select the corresponding text file
 			if (screenType == "Title Screen") {
 				textFile = new File("TitleText.txt");
 
 				//get the duration for title screen
 				titleDuration = addDuration.getText();
+				
+				//get the inputFrame for title screen
+				titleFrameTime = addTimeFrame.getText();
+
+
 
 			} else {
-				
+
 				textFile = new File("CreditText.txt");
 
-				//get the duration for title screen
+				//get the duration for credit screen
 				creditDuration = addDuration.getText();
+				
+				//get the inputFrame for credit screen
+				creditFrameTime = addTimeFrame.getText();
+
 			}
 
 			//check whether the file exists
@@ -470,15 +569,15 @@ public class TextEditor extends JPanel implements ActionListener {
 			// If the file does not exist create a new file, and append the
 			// addTextArea text into the file
 			else {
-				
-				
+
+
 				FileWriter fw;
 				try {
-					
+
 					System.out.println("im here ");
 					System.out.println(textFile);
-					
-					
+
+
 					fw = new FileWriter(textFile, true);
 					BufferedWriter bw = new BufferedWriter(fw);
 					PrintWriter x = new PrintWriter(bw);
@@ -494,8 +593,7 @@ public class TextEditor extends JPanel implements ActionListener {
 
 			setSettings();
 
-			//saveButton.setEnabled(false);
-		
+			
 		}else if (e.getSource() == prevBtn){
 			commenceTextEdit();
 			
@@ -503,16 +601,16 @@ public class TextEditor extends JPanel implements ActionListener {
 			screenType = screenList.getSelectedItem().toString();
 
 		} else if (e.getSource() == fontsList) {
-			titleFontType = fontsList.getSelectedIndex();
+			fontType = fontsList.getSelectedIndex();
 
 		} else if (e.getSource() == stylesList) {
-			titleFontStyle = stylesList.getSelectedIndex();
+			fontStyle = stylesList.getSelectedIndex();
 
 		} else if (e.getSource() == sizesList) {
-			titleFontSize = Integer.parseInt(sizesList.getSelectedItem().toString());
+			fontSize = Integer.parseInt(sizesList.getSelectedItem().toString());
 
 		} else if (e.getSource() == coloursList) {
-			titleFontColour = coloursList.getSelectedItem().toString();
+			fontColour = coloursList.getSelectedItem().toString();
 
 		}
 
@@ -520,7 +618,7 @@ public class TextEditor extends JPanel implements ActionListener {
 
 	// CommenceTextEdit method executes longTask
 	public void commenceTextEdit() {
-		addTextArea.setFont(new Font("TimesRoman", 0, titleFontSize)); // ASK CHAHAT
+		addTextArea.setFont(new Font("TimesRoman", 0, fontSize)); // ASK CHAHAT
 		// WHERE TO ADD
 		// THIS
 		longTask = new BackgroundTask();
@@ -531,41 +629,43 @@ public class TextEditor extends JPanel implements ActionListener {
 	// (starting point)
 	public void refreshDownload() {
 
-		saveButton.setEnabled(false);
+		saveButton.setEnabled(true);
 
 	}
 
 	public void setSettings() {
 
 		StringBuilder font = new StringBuilder();
-		if (titleFontType == 0){
+		if (fontType == 0){
 			font.append("Arial");
 		}
-		else if (titleFontType == 1){
+		else if (fontType == 1){
 			font.append("Courier_New");
 		}
-		else if (titleFontType == 2){
+		else if (fontType == 2){
 			font.append("Georgia");
 		}
-		else if (titleFontType == 2){
+		else if (fontType == 2){
 			font.append("Times_New_Roman");
 		}
 		else{
 			font.append("Verdana");
 		}
 
-		if (titleFontStyle == 1){
+		if (fontStyle == 1){
 			font.append("_Bold");
 		}
-		else if (titleFontStyle == 2){
+		else if (fontStyle == 2){
 			font.append("_Italic");
 		}
-		else if (titleFontStyle == 3){
+		else if (fontStyle == 3){
 			font.append("_Bold_Italic");
 		}
 
 		font.append(".ttf");
 		fontName = font.toString();
+
+		
 
 
 
